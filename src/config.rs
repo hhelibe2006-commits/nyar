@@ -20,7 +20,7 @@ impl Config {
         let mut config_file = PathBuf::from(proj_dirs.config_dir());
         std::fs::create_dir_all(&config_file).expect("");
         config_file.push("config.yaml");
-        return  config_file;
+        config_file
     }
 
     pub fn load_default_config() -> Result<Self, Box<dyn std::error::Error>> {
@@ -80,35 +80,29 @@ pub struct TaskConfig {
 impl From<&Task> for TaskConfig {
     fn from(task: &Task) -> Self {
         let mut sched: Option<cron::Schedule> = None;
-        match task.schedule.clone() {
-            Some(e) => {
-                sched = Some(e);
-                ()
-            }
-            None => {}
+        if let Some(e) = task.schedule.clone() {
+            sched = Some(e);
+            
         };
         let mut sched_str = String::new();
-        if !sched.is_none() {
-            sched_str = sched.unwrap().to_string();
+        if let Some(s) = sched {
+            sched_str = s.to_string();
         }
 
-        return Self {
+        Self {
             name: task.name.clone(),
             command: task.command.clone(),
             run_on_startup: task.run_on_startup,
             schedule: Some(sched_str),
             restart_after_stop: task.restart_after_stop,
             enabled: task.enabled,
-        };
+        }
     }
 }
 impl TaskConfig {
     pub fn to_task(&self) -> Task {
         let schedule = match self.schedule {
-            Some(ref s) => match cron::Schedule::from_str(s) {
-                Ok(parsed_schedule) => Some(parsed_schedule),
-                Err(_) => None,
-            },
+            Some(ref s) => cron::Schedule::from_str(s).ok(),
             None => None,
         };
         let task = Task::new(

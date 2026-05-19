@@ -76,7 +76,7 @@ impl Task {
             restart_after_stop,
             name: name.to_string(),
             status: TaskStatus::NotStarted,
-            enabled: enabled,
+            enabled,
             completion_count: 0,
         }
     }
@@ -90,7 +90,7 @@ impl Task {
     }
 
     pub fn start_subprocess(&mut self) -> Child {
-        if let Err(_) = std::fs::create_dir_all(logs_dir()) {}
+        let _ = std::fs::create_dir_all(logs_dir()).is_err();
         // 如果用户填写了命令，则使用用户的命令；否则默认使用 "main.py"
         let shell = match OS {
             "windows" => "powershell",
@@ -193,7 +193,7 @@ fn list_tasks(tasks: &HashMap<String, Task>) {
         "CompletionCount"
     );
 
-    for (_, task) in tasks {
+    for task in tasks.values() {
         println!(
             "{: <20}  {: <20}  {: <15}  {: <10}  {: <15}  {: <10}  {: <10}   {: <10}",
             task.name,
@@ -214,5 +214,5 @@ pub fn logs_dir() -> PathBuf {
     let mut config_file = PathBuf::from(proj_dirs.config_dir());
     std::fs::create_dir_all(&config_file).expect("");
     config_file.push("logs/");
-    return config_file;
+    config_file
 }

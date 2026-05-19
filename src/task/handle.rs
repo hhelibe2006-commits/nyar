@@ -25,12 +25,9 @@ pub fn handle_command(tasks: &mut HashMap<String, Task>, command: String, config
             // Create a new task with the provided parameters
             // task_name: String, schedule: String, run_on_startup: String, restart_after_stop: String
             let mut sche: Option<cron::Schedule> = None;
-            match Schedule::from_str(schedule) {
-                Ok(a) => {
-                    sche = Some(a);
-                    ()
-                }
-                Err(_) => {}
+            if let Ok(a) = Schedule::from_str(schedule) {
+                sche = Some(a);
+                
             };
             let new_task = Task::new(
                 task_name,
@@ -42,9 +39,7 @@ pub fn handle_command(tasks: &mut HashMap<String, Task>, command: String, config
             );
             tasks.insert(task_name.to_string(), new_task);
             println!("Created new task: {}", task_name);
-            let task_configs: Vec<TaskConfig> = tasks
-                .iter()
-                .map(|(_, task)| TaskConfig::from(task))
+            let task_configs: Vec<TaskConfig> = tasks.values().map(TaskConfig::from)
                 .collect();
             // let task_configs: Vec<config::TaskConfig> = tasks
             //     .iter()
@@ -121,12 +116,11 @@ pub async fn handle_tasks(
     config: Config,
 ) -> ! {
     // 启动任务
-    for (_, task) in &mut tasks {
-        if task.enabled {
-            if task.run_on_startup {
+    for task in tasks.values_mut() {
+        if task.enabled
+            && task.run_on_startup {
                 task.start();
             }
-        }
     }
     clear_screen();
     list_tasks(&tasks);
@@ -134,12 +128,11 @@ pub async fn handle_tasks(
     // 主循环
     loop {
         // 遍历任务，检查任务状态,并执行cron表达式
-        for (_task_name, task) in &mut tasks {
-            if task.enabled {
-                if task.should_run_now() {
+        for task in tasks.values_mut() {
+            if task.enabled
+                && task.should_run_now() {
                     task.start()
                 }
-            }
 
             match task.status {
                 TaskStatus::Running => task.check_child(),
@@ -199,7 +192,7 @@ fn display_help() {
 pub fn clear_screen() {
     if cfg!(windows) {
         Command::new("cmd")
-            .args(&["/c", "cls"])
+            .args(["/c", "cls"])
             .status()
             .expect("Failed to clear screen");
     } else {
