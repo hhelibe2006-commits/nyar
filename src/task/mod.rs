@@ -90,7 +90,7 @@ impl Task {
     }
 
     pub fn start_subprocess(&mut self) -> Child {
-        std::fs::create_dir_all(logs_dir()).is_err();
+        let _ = std::fs::create_dir_all(logs_dir()).is_err();
         // 如果用户填写了命令，则使用用户的命令；否则默认使用 "main.py"
         let shell = match OS {
             "windows" => "powershell",
