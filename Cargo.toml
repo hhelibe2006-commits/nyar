@@ -23,7 +23,7 @@ serde_yaml = "0.9.30"
 tokio = { version = "1.52.3", features = ["full"] }
 tokio-test = "0.4.5"
 [target.'cfg(any(all(target_arch="aarch64", target_vendor="unknown", target_os="linux"), target_env="musl"))'.dependencies]
-reqwest = { version = "0.13.3", default-features = false, features = ["json", "cookies", "rustls"] }
+reqwest = { version = "0.13.3", default-features = false, features = ["json", "cookies", "rustls", "query"] }
 
 [target.'cfg(not(any(all(target_arch="aarch64", target_vendor="unknown", target_os="linux"), target_env="musl")))'.dependencies]
-reqwest = { version = "0.13.3", features = ["cookies", "json"] }
+reqwest = { version = "0.13.3", features = ["cookies", "json", "query"] }
